@@ -39,7 +39,6 @@ public:
     }
     const vector<Complaint*>& getcomplaints()
     {
-
         return complaints;
     }
 
@@ -377,32 +376,45 @@ public:
         string line;
 
         while (getline(file, line)) {
-            teachers.push_back(new Teacher(line));
+            addteacher(line);
         }
 
         file.close();
+    }
+    void addteacher(string &line)
+    {
+        teachers.push_back(new Teacher(line));
     }
 
     void loadFromFile_e(const string& filename, int i) {
         ifstream file(filename);
         string line;
 
-        while (getline(file, line)) {
-            dept[i]->setdept<Employee>(line);
+        while (getline(file, line)) 
+        {
+            addemployee(line, i);
         }
 
         file.close();
+    }
+    void addemployee(string &line,int i)
+    {
+        dept[i]->setdept<Employee>(line);
     }
     void loadFromFile_m(const string& filename) {
         ifstream file(filename);
         string line;
         int i = 0;
         while (getline(file, line) && i < 3) {
-            dept[i]->setManager(line);
+            addmanager(line, i);
             i++;
         }
 
         file.close();
+    }
+    void addmanager(string& line,int i)
+    {
+        dept[i]->setManager(line);
     }
     void loadFromFile_c(string filename, int i)
     {
@@ -442,9 +454,8 @@ public:
         }
 
         for (const auto& teacher : teachers) {
-            if (teacher->getName() == filedBy) {
-                /*Complaint* newComplaint = new Complaint(stateInstance, date, description, filedBy, dept[i]);
-                teacher->addComplaint<Complaint>(newComplaint);*/
+            if (teacher->getName() == filedBy) 
+            {
                 if (stateInstance != nullptr)
                 {
                     Complaint* newc = new Complaint(stateInstance, date, description, dept[i], teacher);
@@ -474,42 +485,6 @@ public:
         dept[i]->printManager();
     }
     void displaydeptComplaints(int i) {
-        //if (i == 0)
-        //{
-        //    cout << "complaints of IT department are : " << endl;
-        //    for (const auto& complaint : dept[i]->getComplaints())
-        //    {
-        //        cout << "Complaint Date: " << complaint->getdate() << endl;
-        //        cout << "Description: " << complaint->getdesc() << endl;
-        //        cout << "Status: ";
-        //        complaint->getstatus()->handle();
-        //        //cout << "filed by : " << complaint->getfiledby() << endl;
-        //    }
-        //}
-        //else if (i == 1)
-        //{
-        //    cout << "complaints of admin department are : " << endl;
-        //    for (const auto& complaint : dept[i]->getComplaints())
-        //    {
-        //        cout << "Complaint Date: " << complaint->getdate() << endl;
-        //        cout << "Description: " << complaint->getdesc() << endl;
-        //        cout << "Status: ";
-        //        complaint->getstatus()->handle();
-        //        //cout << "filed by : " << complaint->getfiledby() << endl;
-        //    }
-        //}
-        //else
-        //{
-        //    cout << "complaints of accounts department are : " << endl;
-        //    for (const auto& complaint : dept[i]->getComplaints())
-        //    {
-        //        cout << "Complaint Date: " << complaint->getdate() << endl;
-        //        cout << "Description: " << complaint->getdesc() << endl;
-        //        cout << "Status: ";
-        //        complaint->getstatus()->handle();
-        //        //cout << "filed by : " << complaint->getfiledby() << endl;
-        //    }
-        //}
         dept[i]->printComplaints();
         cout << endl<<"--------------------------------------------------------------------------------" << endl;
 
@@ -546,6 +521,26 @@ int main()
     app.displaydeptComplaints(1);
     app.displaydeptComplaints(2);
     app.printteachercomplaints();
+
+    string name, date, desc,line;
+
+    cout << "\n\n\nAdd a complaint" << endl;//YEH MENE DUMMY BNAYA HAI SIRF CHECK KERNE KE LIYE ISKO BESHAQ COMMENT KERDENA YAHAN SE 
+    cout << "Enter date" << endl;
+    cin >> date;
+    app.displayTeachers();
+    
+    int i;
+    cin.ignore();
+    cout << "Enter your name" << endl;
+    getline(cin,name);
+    cin.ignore();
+    cout << "Enter the description of the complaint" << endl;
+    getline(cin, desc);
+    cout << "Enter your department\n1.IT\n2.Admin\n3.Accounts" << endl;
+    cin >> i;
+    line = date + ";New;" + desc + ";" + name + ":";
+    app.addcomplaint(line,i-1);
+    app.displaydeptComplaints(1);
     /*cout << "Employees" << endl;
     app.displayPersons(1);
     cout << "Managers" << endl;
@@ -588,3 +583,4 @@ void Accounts::printComplaints() const
         complaint->printComplaint();
     }
 }
+
