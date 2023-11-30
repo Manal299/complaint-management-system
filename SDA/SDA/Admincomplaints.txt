@@ -1,0 +1,5 @@
+2023-12-05;Resolved;Maintenance request for broken office chairs;Ayesha Khan:Zara Abbas,Bilal Hassan, Sara Shah, Yasir Malik;2023-12-06
+2023-11-15;New;Complaints about inadequate heating in the building;Fatima Malik:Farid Ahmed,Hira Ali, Salman Ahmed, Nida Shah;2023-11-16
+2023-10-20;Resolved;Parking space allocation issues;Sadia Iqbal:Aisha Malik,Usman Akhtar, Fariha Mahmood, Imran Haider;2023-10-21
+2023-09-08;Closed;Security concerns reported at the main entrance;Bilal Hassan:Farhan Ahmed,Ali Khan, Ayesha Khan;2023-09-09
+2023-08-02;New;Problems with cleaning services in office areas;Ahmed Ali:Zainab Siddiqui,Ahmed Ali, Fatima Malik;2023-08-03

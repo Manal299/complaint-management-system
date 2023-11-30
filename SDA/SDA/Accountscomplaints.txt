@@ -1,0 +1,5 @@
+2023-12-05;Closed;Discrepancies in departmental budget report;Ayesha Khan:Zara Abbas,Bilal Hassan, Sara Shah, Yasir Malik;2023-12-06
+2023-11-15;New;Delayed salary payments reported by staff;Fatima Malik:Farid Ahmed,Hira Ali, Salman Ahmed, Nida Shah;2023-11-16
+2023-10-20;Resolved;Errors in student tuition fee invoices;Sadia Iqbal:Aisha Malik,Usman Akhtar, Fariha Mahmood, Imran Haider;2023-10-21
+2023-09-08;Assigned;Reimbursement requests not processed;Bilal Hassan:Farhan Ahmed,Ali Khan, Ayesha Khan;2023-09-09
+2023-08-02;Assigned;Issues with vendor payment processing;Ahmed Ali:Zainab Siddiqui,Ahmed Ali, Fatima Malik;2023-08-03

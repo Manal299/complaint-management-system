@@ -1,0 +1,6 @@
+2023-12-05;Resolved;Students reported Wi-Fi issues in an online class;Ayesha Khan:Zara Abbas,Bilal Hassan, Sara Shah, Yasir Malik;2023-12-06
+2023-11-15;New;Technical difficulties in the computer lab;Fatima Malik:Farid Ahmed,Hira Ali, Salman Ahmed, Nida Shah;2023-11-16
+2023-10-20;Closed;Class scheduling conflicts reported by students;Sadia Iqbal:Aisha Malik,Usman Akhtar, Fariha Mahmood, Imran Haider;2023-10-21
+2023-09-08;Assigned;Issues with projector during a presentation;Bilal Hassan:Farhan Ahmed,Ali Khan, Ayesha Khan;2023-09-09
+2023-08-02;New;Network connectivity problems in the computer lab;Ahmed Ali:Zainab Siddiqui,Ahmed Ali, Fatima Malik;2023-08-03
+2023-08-03;New;Network connectivity problems in the computer lab;Ayesha Khan:Zainab Siddiqui,Ahmed Ali, Fatima Malik;2023-08-04
