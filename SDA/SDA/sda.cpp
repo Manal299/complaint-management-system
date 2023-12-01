@@ -10,6 +10,7 @@ class Teacher;
 class Department;
 class Complaint;
 class State;
+class Employee;
 
 
 class Date
@@ -35,7 +36,17 @@ class Assignment
 {
     Date date;
     Complaint* complaint;
+    Employee* employee;
 public:
+    Assignment(int d, int m, int y, Complaint* c, Employee* e);
+    string employeename();
+    string getdate() const
+    {
+        int d, m, y;
+        date.get_date(d, m, y);
+        string date = to_string(y) + "-" + to_string(m) + "-" + to_string(d);
+        return date;
+    }
 };
 
 
@@ -53,7 +64,7 @@ class Teacher : public Person
     vector<Complaint*> complaints;
 public:
     Teacher(string name) :Person(name) {}
-    
+
     void addComplaint(Complaint* complaint) {
         complaints.push_back(complaint);
     }
@@ -67,9 +78,14 @@ public:
 class Employee : public Person
 {
     Department* dept;
+    vector<Assignment*> assignments;
 public:
     Employee(string name, Department* d) :Person(name) { dept = d; }
     Department* getDepartment() const { return dept; }
+    void addassignment(Assignment* a)
+    {
+        assignments.push_back(a);
+    }
 };
 
 class Manager :public Person
@@ -124,11 +140,12 @@ public:
     virtual void printEmployees() const {}
     virtual void printManager() const {}
     virtual void printComplaints()const {}
-    virtual string getdeptname() =0;
+    virtual string getdeptname() = 0;
     Department* getdept()
     {
         return this;
     }
+    virtual void addassignment(vector<string>e, int d, int m, int y) {}
     virtual ~Department()
     {
         delete mgr;
@@ -159,9 +176,30 @@ public:
         }
     }
     void printComplaints() const;
-    string getdeptname() 
+    string getdeptname()
     {
         return "IT";
+    }
+    void addassignment(vector<string>e, int d, int m, int y)
+    {
+        const vector<Complaint*>& departmentComplaints = getComplaints();
+
+        // Ensure there is at least one complaint to assign to
+        if (!departmentComplaints.empty()) {
+            Complaint* lastComplaint = departmentComplaints.back();
+            Date assignmentDate(d, m, y);
+
+            // Filter the provided employee names list to include only those who are in the IT department
+            vector<string> assignedEmployees;
+            for (const auto& employeeName : e) {
+                for (const auto& emp : getEmployees()) {
+                    if (emp->getName() == employeeName) {
+                        new Assignment(d, m, y, lastComplaint, emp);
+                        break; // Break the inner loop once the employee is found
+                    }
+                }
+            }
+        }
     }
 };
 
@@ -307,16 +345,17 @@ public:
 Closed* Closed::instance = nullptr;
 class Complaint
 {
+    vector<Assignment*>assignments;
     State* currentState;
     Department* dept;
     Teacher* teacher;
     Date date;
     string description;
 public:
-    Complaint(int d,int m,int y,State* state, string desc, Department* dept,Teacher*teach) :date(d,m,y)
+    Complaint(int d, int m, int y, State* state, string desc, Department* dept, Teacher* teach) :date(d, m, y)
     {
-        currentState=state;
-        description=desc;
+        currentState = state;
+        description = desc;
         this->dept = dept;
         teacher = teach;
         this->dept->addComplaint(this);
@@ -336,7 +375,7 @@ public:
     {
         int d, m, y;
         date.get_date(d, m, y);
-        string date = to_string(y)+"-"+ to_string(m) + "-" + to_string(d);
+        string date = to_string(y) + "-" + to_string(m) + "-" + to_string(d);
         return date;
     }
     State* getstatus()
@@ -349,25 +388,36 @@ public:
     }
     void printComplaint() const
     {
-        int d,m,y;
-        cout << endl<<"Complaint Details:" << endl;
+        int d, m, y;
+        cout << endl << "Complaint Details:" << endl;
         cout << "Date: " << getdate() << endl;
         cout << "Description: " << description << endl;
         currentState->handle();
-        cout << "Department: "<<dept->getdeptname() << endl;
-        cout << "Teacher: "<< teacher->getName();
-    }
+        cout << "Department: " << dept->getdeptname() << endl;
+        cout << "Teacher: " << teacher->getName();
+        cout << "Assignment to:" << endl;
+        Assignment* firstAssignment = assignments.front();
+        for (const auto& assignment : assignments) {
 
+            cout << assignment->employeename() << endl;
+        }
+        cout << "assigned Date :" << firstAssignment->getdate();
+
+    }
+    void addassignment(Assignment* a)
+    {
+        assignments.push_back(a);
+    }
 
     //string getfiledby()
     //{
     //    return filedby;
     //}
-    /*Department* getdept()
+    / Department getdept()
     {
         return dept;
     }*/
-    ~Complaint() {
+        ~Complaint() {
         // currentState does not need to be deleted since it's managed by singleton classes
     }
 };
@@ -407,7 +457,7 @@ public:
 
         file.close();
     }
-    void addteacher(string &line)
+    void addteacher(string& line)
     {
         teachers.push_back(new Teacher(line));
     }
@@ -416,14 +466,14 @@ public:
         ifstream file(filename);
         string line;
 
-        while (getline(file, line)) 
+        while (getline(file, line))
         {
             addemployee(line, i);
         }
 
         file.close();
     }
-    void addemployee(string &line,int i)
+    void addemployee(string& line, int i)
     {
         dept[i]->setdept<Employee>(line);
     }
@@ -438,7 +488,7 @@ public:
 
         file.close();
     }
-    void addmanager(string& line,int i)
+    void addmanager(string& line, int i)
     {
         dept[i]->setManager(line);
     }
@@ -448,23 +498,29 @@ public:
         string line;
 
         while (getline(file, line)) {
-            
-            addcomplaint(line,i);
+
+            addcomplaint(line, i);
 
         }
 
         file.close();
     }
-    void addcomplaint(string &line,int i)
+    void addcomplaint(string& line, int i)
     {
-        string date,month,year, description, filedBy, status;
+        string date, month, year, description, filedBy, status;
+        string employeeList;
+        string ayear, amonth, adate;
         stringstream ss(line);
-        if (getline(ss,year, '-') &&
+        if (getline(ss, year, '-') &&
             getline(ss, month, '-') &&
             getline(ss, date, ';') &&
             getline(ss, status, ';') &&
             getline(ss, description, ';') &&
-            getline(ss, filedBy, ':')) {
+            getline(ss, filedBy, ':') &&
+            getline(ss, employeeList, ';') &&
+            getline(ss, ayear, '-') &&
+            getline(ss, amonth, '-') &&
+            getline(ss, adate)) {
         }
         int d, m, y;
         d = stoi(date);
@@ -486,11 +542,11 @@ public:
         }
 
         for (const auto& teacher : teachers) {
-            if (teacher->getName() == filedBy) 
+            if (teacher->getName() == filedBy)
             {
                 if (stateInstance != nullptr)
                 {
-                    Complaint* newc = new Complaint(d,m,y,stateInstance, description, dept[i], teacher);
+                    Complaint* newc = new Complaint(d, m, y, stateInstance, description, dept[i], teacher);
                     break;
                 }
             }
@@ -518,8 +574,19 @@ public:
     }
     void displaydeptComplaints(int i) {
         dept[i]->printComplaints();
-        cout << endl<<"--------------------------------------------------------------------------------" << endl;
+        cout << endl << "--------------------------------------------------------------------------------" << endl;
 
+    }
+    vector<string> split(const string& str, char delimiter) {
+        vector<string> tokens;
+        string token;
+        stringstream ss(str);
+
+        while (getline(ss, token, delimiter)) {
+            tokens.push_back(token);
+        }
+
+        return tokens;
     }
 
     ~Main()
@@ -554,24 +621,24 @@ int main()
     app.displaydeptComplaints(2);
     app.printteachercomplaints();
 
-    string name, date, desc,line;
+    string name, date, desc, line;
 
     cout << "\n\n\nAdd a complaint" << endl;//YEH MENE DUMMY BNAYA HAI SIRF CHECK KERNE KE LIYE ISKO BESHAQ COMMENT KERDENA YAHAN SE 
     cout << "Enter date" << endl;
     cin >> date;
     app.displayTeachers();
-    
+
     int i;
     cin.ignore();
     cout << "Enter your name" << endl;
-    getline(cin,name);
+    getline(cin, name);
     cin.ignore();
     cout << "Enter the description of the complaint" << endl;
     getline(cin, desc);
     cout << "Enter your department\n1.IT\n2.Admin\n3.Accounts" << endl;
     cin >> i;
     line = date + ";New;" + desc + ";" + name + ":";
-    app.addcomplaint(line,i-1);
+    app.addcomplaint(line, i - 1);
     app.displaydeptComplaints(1);
     /*cout << "Employees" << endl;
     app.displayPersons(1);
@@ -616,3 +683,15 @@ void Accounts::printComplaints() const
     }
 }
 
+Assignment::Assignment(int d, int m, int y, Complaint* c, Employee* e) :date(d, m, y)
+{
+    complaint = c;
+    employee = e;
+    complaint->addassignment(this);
+    employee->addassignment(this);
+}
+
+string Assignment::employeename()
+{
+    return employee->getName();
+}
