@@ -218,7 +218,7 @@ public:
     }
 
     void handle() {
-        cout << "New State" << endl;
+        cout << "State: New" << endl;
     }
 };
 
@@ -238,7 +238,7 @@ public:
     }
 
     void handle() {
-        cout << "Assigned State" << endl;
+        cout << "State: Assigned" << endl;
     }
 };
 
@@ -258,7 +258,7 @@ public:
     }
 
     void handle() {
-        cout << "Resolved State" << endl;
+        cout << "State: Resolved" << endl;
     }
 };
 
@@ -278,7 +278,7 @@ public:
     }
 
     void handle() {
-        cout << "Closed State" << endl;
+        cout << "State: Closed" << endl;
     }
 };
 
@@ -328,8 +328,9 @@ public:
         cout << endl<<"Complaint Details:" << endl;
         cout << "Date: " << date << endl;
         cout << "Description: " << description << endl;
-        cout << dept->getdeptname() << endl;
-        cout << teacher->getName();
+        currentState->handle();
+        cout << "Department: "<<dept->getdeptname() << endl;
+        cout << "Teacher: "<< teacher->getName();
     }
 
 
