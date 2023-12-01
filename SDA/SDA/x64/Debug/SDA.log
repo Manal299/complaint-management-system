@@ -1,1 +1,5 @@
-﻿  SDA.vcxproj -> E:\complaint-management-system\SDA\x64\Debug\SDA.exe
+﻿  sda.cpp
+E:\complaint-management-system\SDA\SDA\sda.cpp(352,15): warning C4101: 'm': unreferenced local variable
+E:\complaint-management-system\SDA\SDA\sda.cpp(352,17): warning C4101: 'y': unreferenced local variable
+E:\complaint-management-system\SDA\SDA\sda.cpp(352,13): warning C4101: 'd': unreferenced local variable
+  SDA.vcxproj -> E:\complaint-management-system\SDA\x64\Debug\SDA.exe

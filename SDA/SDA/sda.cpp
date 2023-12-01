@@ -11,9 +11,29 @@ class Department;
 class Complaint;
 class State;
 
+
+class Date
+{
+    int dd;
+    int mm;
+    int yy;
+public:
+    Date(int d, int m, int y)
+    {
+        dd = d;
+        mm = m;
+        yy = y;
+    }
+    void get_date(int& d, int& m, int& y)const
+    {
+        d = dd;
+        m = mm;
+        y = yy;
+    }
+};
 class Assignment
 {
-    string date;
+    Date date;
     Complaint* complaint;
 public:
 };
@@ -290,13 +310,12 @@ class Complaint
     State* currentState;
     Department* dept;
     Teacher* teacher;
-    string date;
+    Date date;
     string description;
 public:
-    Complaint(State* state, string d, string desc, Department* dept,Teacher*teach) 
+    Complaint(int d,int m,int y,State* state, string desc, Department* dept,Teacher*teach) :date(d,m,y)
     {
         currentState=state;
-        date=d;
         description=desc;
         this->dept = dept;
         teacher = teach;
@@ -313,8 +332,11 @@ public:
             currentState->handle();
         }
     }
-    string getdate()
+    string getdate() const
     {
+        int d, m, y;
+        date.get_date(d, m, y);
+        string date = to_string(y)+"-"+ to_string(m) + "-" + to_string(d);
         return date;
     }
     State* getstatus()
@@ -327,8 +349,9 @@ public:
     }
     void printComplaint() const
     {
+        int d,m,y;
         cout << endl<<"Complaint Details:" << endl;
-        cout << "Date: " << date << endl;
+        cout << "Date: " << getdate() << endl;
         cout << "Description: " << description << endl;
         currentState->handle();
         cout << "Department: "<<dept->getdeptname() << endl;
@@ -434,13 +457,19 @@ public:
     }
     void addcomplaint(string &line,int i)
     {
-        string date, description, filedBy, status;
+        string date,month,year, description, filedBy, status;
         stringstream ss(line);
-        if (getline(ss, date, ';') &&
+        if (getline(ss,year, '-') &&
+            getline(ss, month, '-') &&
+            getline(ss, date, ';') &&
             getline(ss, status, ';') &&
             getline(ss, description, ';') &&
             getline(ss, filedBy, ':')) {
         }
+        int d, m, y;
+        d = stoi(date);
+        m = stoi(month);
+        y = stoi(year);
         State* stateInstance = nullptr;
         // Determine the correct State singleton instance based on stateStr
         if (status == "New") {
@@ -461,7 +490,7 @@ public:
             {
                 if (stateInstance != nullptr)
                 {
-                    Complaint* newc = new Complaint(stateInstance, date, description, dept[i], teacher);
+                    Complaint* newc = new Complaint(d,m,y,stateInstance, description, dept[i], teacher);
                     break;
                 }
             }
