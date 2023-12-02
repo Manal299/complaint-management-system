@@ -3,6 +3,7 @@
 #include <vector>
 #include<fstream>
 #include<sstream>
+#include <algorithm>
 using namespace std;
 
 class Person;
@@ -11,7 +12,7 @@ class Department;
 class Complaint;
 class State;
 class Employee;
-
+bool compareChronologicalOrder(const Complaint* a, const Complaint* b);
 
 class Date
 {
@@ -30,6 +31,27 @@ public:
         d = dd;
         m = mm;
         y = yy;
+    }
+    bool operator<(const Date& other) const 
+    {
+        // Compare years first
+        if (yy <other.yy) {
+            return true;
+        }
+        else if (yy > other.yy) {
+            return false;
+        }
+
+        // If years are equal, compare months
+        if (mm < other.mm) {
+            return true;
+        }
+        else if (mm > other.mm) {
+			return false;
+		}
+
+        // If months are equal, compare days
+        return dd < other.dd;
     }
 };
 class Assignment
@@ -66,12 +88,15 @@ public:
     Teacher(string name) :Person(name) {}
 
     void addComplaint(Complaint* complaint) {
+
         complaints.push_back(complaint);
+        sort(complaints.begin(), complaints.end(), compareChronologicalOrder);
     }
     const vector<Complaint*>& getcomplaints()
     {
         return complaints;
     }
+    void printComplaints() const;
 
 };
 
@@ -114,6 +139,10 @@ public:
 
         complaints.push_back(complaint);
     }
+    void sortcomplaints()
+    {
+		sort(complaints.begin(), complaints.end(), compareChronologicalOrder);
+	}
     void setManager(string name)
     {
         mgr = new Manager(name, this);
@@ -187,10 +216,8 @@ public:
         // Ensure there is at least one complaint to assign to
         if (!departmentComplaints.empty()) {
             Complaint* lastComplaint = departmentComplaints.back();
-            Date assignmentDate(d, m, y);
 
             // Filter the provided employee names list to include only those who are in the IT department
-            vector<string> assignedEmployees;
             for (const auto& employeeName : e) {
                 for (const auto& emp : getEmployees()) {
                     if (emp->getName() == employeeName) {
@@ -200,6 +227,7 @@ public:
                 }
             }
         }
+        sortcomplaints();
     }
 };
 
@@ -228,6 +256,27 @@ public:
     {
         return "Admin";
     }
+    void addassignment(vector<string>e, int d, int m, int y)
+    {
+        const vector<Complaint*>& departmentComplaints = getComplaints();
+
+        // Ensure there is at least one complaint to assign to
+        if (!departmentComplaints.empty()) {
+            Complaint* lastComplaint = departmentComplaints.back();
+
+            // Filter the provided employee names list to include only those who are in the IT department
+            for (const auto& employeeName : e) {
+                for (const auto& emp : getEmployees()) {
+                    if (emp->getName() == employeeName) {
+                        new Assignment(d, m, y, lastComplaint, emp);
+                        break; // Break the inner loop once the employee is found
+                    }
+                }
+            }
+        }
+        sortcomplaints();
+
+    }
 };
 
 class Accounts : public Department {
@@ -254,6 +303,26 @@ public:
     string getdeptname()
     {
         return "Accounts";
+    }
+    void addassignment(vector<string>e, int d, int m, int y)
+    {
+        const vector<Complaint*>& departmentComplaints = getComplaints();
+
+        // Ensure there is at least one complaint to assign to
+        if (!departmentComplaints.empty()) {
+            Complaint* lastComplaint = departmentComplaints.back();
+
+            // Filter the provided employee names list to include only those who are in the IT department
+            for (const auto& employeeName : e) {
+                for (const auto& emp : getEmployees()) {
+                    if (emp->getName() == employeeName) {
+                        new Assignment(d, m, y, lastComplaint, emp);
+                        break; // Break the inner loop once the employee is found
+                    }
+                }
+            }
+        }
+        sortcomplaints();
     }
 };
 
@@ -378,6 +447,10 @@ public:
         string date = to_string(y) + "-" + to_string(m) + "-" + to_string(d);
         return date;
     }
+    const Date& getDate() const
+    {
+		return date;
+	}
     State* getstatus()
     {
         return currentState;
@@ -389,19 +462,26 @@ public:
     void printComplaint() const
     {
         int d, m, y;
-        cout << endl << "Complaint Details:" << endl;
+        cout << endl << "\n\nComplaint Details:" << endl;
         cout << "Date: " << getdate() << endl;
         cout << "Description: " << description << endl;
         currentState->handle();
         cout << "Department: " << dept->getdeptname() << endl;
-        cout << "Teacher: " << teacher->getName();
-        cout << "Assignment to:" << endl;
-        Assignment* firstAssignment = assignments.front();
-        for (const auto& assignment : assignments) {
+        cout << "Teacher: " << teacher->getName()<<endl;
+        if (!assignments.empty())
+        {
+            Assignment* firstAssignment = assignments.front();
+			cout << "Assigned to:" << endl;
+            for (const auto& assignment : assignments) {
 
-            cout << assignment->employeename() << endl;
-        }
-        cout << "assigned Date :" << firstAssignment->getdate();
+				cout << assignment->employeename() << endl;
+			}
+			cout << "assigned Date :" << firstAssignment->getdate();
+		}
+        else
+        {
+			cout << "Not assigned to anyone yet" << endl;
+		}
 
     }
     void addassignment(Assignment* a)
@@ -413,10 +493,10 @@ public:
     //{
     //    return filedby;
     //}
-    / Department getdept()
-    {
-        return dept;
-    }*/
+    //Department getdept()
+    //{
+    //    return dept;
+    //}
         ~Complaint() {
         // currentState does not need to be deleted since it's managed by singleton classes
     }
@@ -546,7 +626,8 @@ public:
             {
                 if (stateInstance != nullptr)
                 {
-                    Complaint* newc = new Complaint(d, m, y, stateInstance, description, dept[i], teacher);
+                    new Complaint(d, m, y, stateInstance, description, dept[i], teacher);
+                    dept[i]->addassignment(split(employeeList, ','), stoi(adate), stoi(amonth), stoi(ayear));  
                     break;
                 }
             }
@@ -559,10 +640,7 @@ public:
     }
     void printteachercomplaints() {
         for (const auto& teacher : teachers) {
-            cout << "Teacher: " << teacher->getName() << endl;
-            for (const auto& complaint : teacher->getcomplaints()) {
-                cout << "Complaint Date: " << complaint->getdate() << ", Description: " << complaint->getdesc() << endl;
-            }
+            teacher->printComplaints();
         }
     }
     void displayEmployees(int i) {
@@ -585,7 +663,6 @@ public:
         while (getline(ss, token, delimiter)) {
             tokens.push_back(token);
         }
-
         return tokens;
     }
 
@@ -683,6 +760,15 @@ void Accounts::printComplaints() const
     }
 }
 
+void Teacher::printComplaints() const
+{
+	cout << "\n\n\nTeacher: " << getName() << endl;
+    for (const auto& complaint : complaints)
+    {
+		complaint->printComplaint();
+	}
+}
+
 Assignment::Assignment(int d, int m, int y, Complaint* c, Employee* e) :date(d, m, y)
 {
     complaint = c;
@@ -694,4 +780,8 @@ Assignment::Assignment(int d, int m, int y, Complaint* c, Employee* e) :date(d, 
 string Assignment::employeename()
 {
     return employee->getName();
+}
+
+bool compareChronologicalOrder(const Complaint* a, const Complaint* b) {
+    return a->getDate() < b->getDate();
 }
