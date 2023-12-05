@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <cstdlib>
 #include <ctime>
+#include<iterator>
 using namespace std;
 
 void displayMainMenu() {
@@ -28,8 +29,10 @@ class State;
 class Employee;
 bool compareChronologicalOrder(const Complaint* a, const Complaint* b);
 void teacherMenu(Main& main);
+void managerMenu(Main& main);
 void employeeMenu(Main& main);
-
+void adminMenu(Main& main);
+void generatereport(Main& main);
 class Date
 {
     int dd;
@@ -48,10 +51,10 @@ public:
         m = mm;
         y = yy;
     }
-    bool operator<(const Date& other) const 
+    bool operator<(const Date& other) const
     {
         // Compare years first
-        if (yy <other.yy) {
+        if (yy < other.yy) {
             return true;
         }
         else if (yy > other.yy) {
@@ -63,11 +66,22 @@ public:
             return true;
         }
         else if (mm > other.mm) {
-			return false;
-		}
+            return false;
+        }
 
         // If months are equal, compare days
         return dd < other.dd;
+    }
+    bool operator<=(const Date& other) const {
+        if (yy != other.yy) return yy < other.yy;
+        if (mm != other.mm) return mm < other.mm;
+        return dd <= other.dd;
+    }
+
+    bool operator>=(const Date& other) const {
+        if (yy != other.yy) return yy > other.yy;
+        if (mm != other.mm) return mm > other.mm;
+        return dd >= other.dd;
     }
 };
 class Assignment
@@ -75,8 +89,9 @@ class Assignment
     Date date;
     Complaint* complaint;
     Employee* employee;
+    int status;
 public:
-    Assignment(int d, int m, int y, Complaint* c, Employee* e);
+    Assignment(int d, int m, int y, Complaint* c, Employee* e,int status);
     string employeename();
     string getdate() const
     {
@@ -86,6 +101,20 @@ public:
         return date;
     }
     string getstatus();
+    bool getStatus() const
+    {
+        if (status == 1)
+        {
+            return true;
+        }
+        return false;
+    }
+    string employeename() const;
+    int employeeid() const;
+    void setstatus(int status)
+    {
+		this->status = status;
+	}
     void viewcomplaints();
 };
 
@@ -105,7 +134,7 @@ class Teacher : public Person
 {
     vector<Complaint*> complaints;
 public:
-    Teacher(string name,int id) :Person(name,id) {}
+    Teacher(string name, int id) :Person(name, id) {}
 
     void addComplaint(Complaint* complaint) {
 
@@ -117,7 +146,6 @@ public:
         return complaints;
     }
     void printComplaints() const;
-
 };
 
 class Employee : public Person
@@ -135,9 +163,9 @@ public:
     {
         for (const auto& assignment : assignments)
         {
-			assignment->viewcomplaints();
-		}
-	}
+            assignment->viewcomplaints();
+        }
+    }
     void printComplaints(const string& status) const;
 
 };
@@ -157,9 +185,9 @@ class Department
     Manager* mgr;
     vector<Complaint*> complaints;
 public:
-    void setdept(int id,string name)
+    void setdept(int id, string name)
     {
-        this->emp.push_back(new Employee(name, this,id));
+        this->emp.push_back(new Employee(name, this, id));
     }
     void addComplaint(Complaint* complaint)
     {
@@ -170,11 +198,11 @@ public:
     }
     void sortcomplaints()
     {
-		sort(complaints.begin(), complaints.end(), compareChronologicalOrder);
-	}
-    void setManager(int id,string name)
+        sort(complaints.begin(), complaints.end(), compareChronologicalOrder);
+    }
+    void setManager(int id, string name)
     {
-        mgr = new Manager(name, this,id);
+        mgr = new Manager(name, this, id);
     }
     template<typename T>
     void setcomplaint(State* stateInstance, string date, string desc, string filedby)
@@ -182,7 +210,7 @@ public:
         this->complaints.push_back(new T(stateInstance, date, desc, filedby, this));
         sortcomplaints();
     }
-    const vector<Employee*>& getEmployees() const
+    const vector<Employee*>& getEmployees()const
     {
         return emp;
     }
@@ -205,7 +233,7 @@ public:
         return this;
     }
     void printComplaints(const string& status) const;
-    void addassignment(int id, vector<int>e, int d, int m, int y);
+    void addassignment(int id, vector<int>e, int d, int m, int y,vector<int>status);
     virtual ~Department()
     {
         delete mgr;
@@ -213,10 +241,28 @@ public:
             delete employee;
         }
     }
+    void removeEmployeeById(int id) {
+        for (size_t i = 0; i < emp.size(); ++i) {
+            if (emp[i]->getid() == id) {
+                for (size_t j = i; j < emp.size() - 1; ++j) {
+                    emp[j] = emp[j + 1];
+                }
+                emp.pop_back();
+                return;
+            }
+        }
+    }
+    void deletemanager()
+    {
+        mgr = nullptr;
+    }
     bool checkid(int id);
+    bool check_personid(int id);
+    bool check_managerid(int id);
     void setState(int id, State* state);
+    bool printComplaintbyId(int id);
+    int checkcomplaint(int sy, int sm, int sd, int ey, int em, int ed);
 
- 
 };
 
 class IT : public Department {
@@ -226,7 +272,7 @@ public:
         cout << "IT Department Employees:" << endl;
         for (const auto& employee : getEmployees())
         {
-            cout << employee->getName() << endl;
+            cout << employee->getid() << "," <<employee->getName() << endl;
         }
     }
 
@@ -253,7 +299,7 @@ public:
     {
         cout << "Admin Department Complaints:" << endl;
         for (const auto& employee : getEmployees()) {
-            cout << employee->getName() << endl;
+            cout << employee->getid()<<","<<employee->getName() << endl;
         }
     }
 
@@ -279,7 +325,7 @@ public:
     {
         cout << "Accounts Department Employees:" << endl;
         for (const auto& employee : getEmployees()) {
-            cout << employee->getName() << endl;
+            cout <<employee->getid()<<","<< employee->getName() << endl;
         }
     }
 
@@ -413,7 +459,7 @@ class Complaint
     string description;
     int id;
 public:
-    Complaint(int id,int d, int m, int y, State* state, string desc, Department* dept, Teacher* teach) :date(d, m, y)
+    Complaint(int id, int d, int m, int y, State* state, string desc, Department* dept, Teacher* teach) :date(d, m, y)
     {
         this->id = id;
         currentState = state;
@@ -426,10 +472,9 @@ public:
 
     void setid(int id)
     {
-		this->id = id;
-	}
+        this->id = id;
+    }
     void setState(State* state) {
-        delete currentState;
         currentState = state;
     }
 
@@ -445,8 +490,8 @@ public:
     }
     const Date& getDate() const
     {
-		return date;
-	}
+        return date;
+    }
 
     const State* getState() const {
         return currentState;
@@ -456,44 +501,100 @@ public:
         return currentState->getStatus();
     }
 
+    bool checkassignmentstatus()
+    {
+        if (getStatus() == "Assigned")
+        {
+            for (const auto& assignment : assignments)
+            {
+                if (!assignment->getStatus())
+                {
+                    return false;
+                }
+            }
+        }
+        else
+        {
+            return false;   
+        }
+        return true;
+    }
     string getdesc()
     {
         return description;
     }
+    bool setassignmentstatus(int eid, int status)
+    {
+        for (const auto& assignment : assignments)
+        {
+            if (assignment->employeeid() == eid)
+            {
+				assignment->setstatus(status);
+				return true;
+			}
+		}
+		return false;
+	}
     void printComplaint() const
     {
         int d, m, y;
         cout << endl << "\n\nComplaint Details:" << endl;
+        cout << "ID: " << id << endl;
         cout << "Date: " << getdate() << endl;
         cout << "Description: " << description << endl;
-        cout<< "Status: " << currentState->getStatus() << endl;
+        cout << "Status: " << currentState->getStatus() << endl;
         cout << "Department: " << dept->getdeptname() << endl;
-        cout << "Teacher: " << teacher->getName()<<endl;
+        cout << "Teacher: " << teacher->getName() << endl;
         if (!assignments.empty())
         {
             Assignment* firstAssignment = assignments.front();
-			cout << "Assigned to:" << endl;
+            cout << "Assigned to:" << endl;
             for (const auto& assignment : assignments) {
 
-				cout << assignment->employeename() << endl;
-			}
-			cout << "assigned Date :" << firstAssignment->getdate();
-		}
+                cout << assignment->employeename() << endl;
+                if (currentState->getStatus() == "Assigned")
+                {
+                    cout << "Progress : ";
+                    if (assignment->getStatus())
+                        cout << "Done" << endl;
+                    else
+                        cout << "In Process" << endl;
+
+                }
+            }
+            cout << "assigned Date :" << firstAssignment->getdate();
+        }
         else
         {
-			cout << "Not assigned to anyone yet" << endl;
-		}
+            cout << "Not assigned to anyone yet" << endl;
+        }
 
     }
+    string getassignedemployees()
+    {
+		string employees;
+        for (const auto& assignment : assignments)
+        {
+            string id = to_string(assignment->employeeid());
+            string name= assignment->employeename();
+
+			employees +=","+id + "," + name;
+		}
+		return employees;
+	}
+    void setdescription(string& desc)
+    {
+		description = desc;
+	}
     void addassignment(Assignment* a)
     {
         assignments.push_back(a);
     }
     int getid()
     {
-		return id;
-	}
-        ~Complaint() {
+        return id;
+    }
+    ~Complaint() {
         // currentState does not need to be deleted since it's managed by singleton classes
     }
 };
@@ -541,9 +642,51 @@ public:
         getline(ss, id, ',');
         getline(ss, name);
         int id1 = stoi(id);
-        teachers.push_back(new Teacher(name,id1));
+        teachers.push_back(new Teacher(name, id1));
     }
-
+    void removeTeacher(int id)
+    {
+        for (size_t i = 0; i < teachers.size(); ++i) {
+            if (teachers[i]->getid() == id) {
+                for (size_t j = i; j < teachers.size() - 1; ++j) {
+                    teachers[j] = teachers[j + 1];
+                }
+                teachers.pop_back();
+                return;
+            }
+        }
+    }
+    bool addfeedback(int  cid,int id,int feedback)
+    {
+        for (const auto& teacher : teachers)
+        {
+            if (teacher->getid() == id)
+            {
+                for (const auto& complaint : teacher->getcomplaints())
+                {
+                    if (complaint->getid() == cid)
+                    {
+                        string desc = complaint->getdesc();
+                        desc += "-Feedback: ";
+                        if (feedback == 1)
+                        {
+                            desc+="Satisfactory";
+                            complaint->setState(Closed::getInstance());
+                        }
+                        else if (feedback == 2)
+                        {
+							desc += "Unsatisfactory";
+							complaint->setState(New::getInstance());
+                            desc += complaint->getassignedemployees();
+						}
+						complaint->setdescription(desc);
+						return true;
+					}
+				}
+			}
+		}
+		return false;
+    }
     void loadFromFile_e(const string& filename, int i) {
         ifstream file(filename);
         string line;
@@ -564,7 +707,53 @@ public:
         getline(ss, id, ',');
         getline(ss, name);
         int id1 = stoi(id);
-        dept[i]->setdept(id1,name);
+        dept[i]->setdept(id1, name);
+    }
+    void removeEmployee(int id, int d)
+    {
+        dept[d]->removeEmployeeById(id);
+    }
+    string getcomplaintdesc(int id, int i)
+    {
+        for(const auto & teacher : teachers)
+        {
+            if (teacher->getid() == i)
+            {
+                for (const auto& complaint : teacher->getcomplaints())
+                {
+                    if (complaint->getid() == id)
+                    {
+                        return complaint->getdesc();
+                    }
+                }
+            }
+        }
+		return "";
+	}
+    void setcomplaintdescription(string& desc, int id, int i)
+    {
+        for (const auto& teacher : teachers)
+        {
+            if (teacher->getid() == i)
+            {
+                for (const auto& complaint : teacher->getcomplaints())
+                {
+                    if (complaint->getid() == id)
+                    {
+                        complaint->setdescription(desc);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+    bool checkid(int id, int i)
+    {
+        if (dept[i]->check_personid(id))
+        {
+            return true;
+        }
+        return false;
     }
     void loadFromFile_m(const string& filename) {
         ifstream file(filename);
@@ -577,6 +766,14 @@ public:
 
         file.close();
     }
+    bool checkmanager(int i)
+    {
+        if (dept[i]->getManager())
+        {
+            return true;
+        }
+        return false;
+    }
     void addmanager(string& line, int i)
     {
         stringstream ss(line);
@@ -585,7 +782,11 @@ public:
         getline(ss, id, ',');
         getline(ss, name);
 
-        dept[i]->setManager(stoi(id),name);
+        dept[i]->setManager(stoi(id), name);
+    }
+    void removemanager(int i)
+    {
+        dept[i]->deletemanager();
     }
     void loadFromFile_c(string filename, int i)
     {
@@ -601,18 +802,19 @@ public:
                 getline(ss, year, '-') &&
                 getline(ss, month, '-') &&
                 getline(ss, date, ';') &&
-                getline(ss, status, ';')) { }
+                getline(ss, status, ';')) {
+            }
             int d, m, y;
             d = stoi(date);
             m = stoi(month);
             y = stoi(year);
-            if(status=="New")
+            if (status == "New")
             {
                 if (getline(ss, description, ';') &&
                     getline(ss, filedBy)) {
-				}
-				
-				addcomplaint(stoi(id), d, m, y, status, description, filedBy, i);
+                }
+
+                addcomplaint(stoi(id), d, m, y, status, description, filedBy, i);
             }
             else
             {
@@ -621,18 +823,19 @@ public:
                     getline(ss, employeeList, ';') &&
                     getline(ss, ayear, '-') &&
                     getline(ss, amonth, '-') &&
-                    getline(ss, adate, ';')) { }
+                    getline(ss, adate, ';')) {
+                }
                 addcomplaint(stoi(id), d, m, y, status, description, filedBy, i);
-                addassignment(stoi(id), employeeList, stoi(adate), stoi(amonth), stoi(ayear), i);
+                addassignment(stoi(id), employeeList, stoi(adate), stoi(amonth), stoi(ayear), i,status);
             }
 
         }
 
         file.close();
     }
-    void addcomplaint(int id,int d,int m,int y,string status,string description,string filedBy,int i)
+    void addcomplaint(int id, int d, int m, int y, string status, string description, string filedBy, int i)
     {
-        
+
         State* stateInstance = nullptr;
         // Determine the correct State singleton instance based on stateStr
         if (status == "New") {
@@ -648,42 +851,54 @@ public:
             stateInstance = Closed::getInstance();
         }
         else {
-			cout << "Invalid state: " << status << endl;
-		}
+            cout << "Invalid state: " << status << endl;
+        }
 
         for (const auto& teacher : teachers) {
             if (teacher->getid() == stoi(filedBy))
             {
                 if (stateInstance != nullptr)
                 {
-                    new Complaint(id,d, m, y, stateInstance, description, dept[i], teacher);
+                    new Complaint(id, d, m, y, stateInstance, description, dept[i], teacher);
                     break;
                 }
             }
         }
     }
-    void addassignment( int id,string employeeList, int d, int m, int y, int i)
+    bool checkcomplaint(int id, int i)
     {
-		vector<int> employeeIds = split(employeeList, ',');
-		dept[i]->addassignment(id,employeeIds, d, m, y);
+        for (const auto& complaint : dept[i]->getComplaints())
+        {
+            if (complaint->getid() == id)
+            {
+				return true;
+			}
+		}
+		return false;
 	}
+    void addassignment(int id, string employeeList, int d, int m, int y, int i,string state)
+    {
+        vector<int> status;
+        vector<int> employeeIds = split(employeeList, ',',status,state);
+        dept[i]->addassignment(id, employeeIds, d, m, y,status);
+    }
     void displayTeachers() {
         for (const auto& teacher : teachers) {
             cout << teacher->getName() << endl;
         }
     }
-    bool teacher(int id,string &name)
+    bool teacher(int id, string& name)
     {
         for (const auto& teacher : teachers) {
             if (teacher->getid() == id)
             {
-                name=teacher->getName();
-				return true;
-			}
-		}
-        
-		return false;
-	}
+                name = teacher->getName();
+                return true;
+            }
+        }
+
+        return false;
+    }
     void printteachercomplaints() {
         for (const auto& teacher : teachers) {
             teacher->printComplaints();
@@ -706,52 +921,149 @@ public:
         for (const auto& employee : dept[i]->getEmployees()) {
             if (employee->getid() == id)
             {
-				name = employee->getName();
+                name = employee->getName();
                 return true;
             }
         }
         return false;
     }
-    void displayManager(int i) {
-        dept[i]->printManager();
-    }
-    void displaycomplaints(int i,string status) {
-		dept[i]->printComplaints(status);
+    bool checkmgr(int id, string& name, int i)
+	{
+		if (dept[i]->getManager())
+		{
+			if (dept[i]->getManager()->getid() == id)
+			{
+				name = dept[i]->getManager()->getName();
+				return true;
+			}
+		}
+		return false;
 	}
+    void displayManager(int i) {
+        if (dept[i]->getManager())
+        {
+            dept[i]->printManager();
+        }
+        else
+        {
+            cout << "this department has no manager" << endl;
+        }
+    }
+    void displaycomplaints(int i, string status) {
+        dept[i]->printComplaints(status);
+    }
     void displaydeptComplaints(int i) {
         dept[i]->printComplaints();
         cout << endl << "--------------------------------------------------------------------------------" << endl;
 
     }
-    vector<int> split(const string& str, char delimiter) {
+    void teachercomplaintsbystatus(int id, string status)
+    {
+        for (const auto& teacher : teachers) {
+            if (teacher->getid() == id)
+            {
+                for (const auto& complaint : teacher->getcomplaints())
+                {
+                    if (complaint->getStatus() == status)
+                    {
+						complaint->printComplaint();
+					}
+				}
+			}
+		}
+	}
+    vector<int> split(const string& str, char delimiter,vector<int> &status,string state) {
         vector<int> tokens;
-        string token;
+        string token,status1;
         stringstream ss(str);
-
-        while (getline(ss, token, delimiter)) {
-            tokens.push_back(stoi(token));
+        if ( state== "Assigned")
+        {
+            while (getline(ss, token, ':')&&getline(ss,status1,delimiter)) {
+                tokens.push_back(stoi(token));
+                status.push_back(stoi(status1));
+            }
         }
+        else if (state== "Resolved" || state == "Closed")
+        {
+            while (getline(ss, token, delimiter)) {
+                tokens.push_back(stoi(token));
+                status.push_back(1);
+            }
+        }
+       
         return tokens;
     }
 
     int generateid(int i)
     {
         int id;
-        do{
-                // Seed the random number generator with the current time
-                std::srand(static_cast<unsigned int>(std::time(0)));
+        do {
+            // Seed the random number generator with the current time
+            std::srand(static_cast<unsigned int>(std::time(0)));
 
-                // Generate and return a random 4-digit ID
-                return 1000 + std::rand() % 9000; // Generates a random number between 1000 and 9999
-            
-		} while (dept[i]->checkid(id));
+            // Generate and return a random 4-digit ID
+            return 1000 + std::rand() % 9000; // Generates a random number between 1000 and 9999
+
+        } while (dept[i]->checkid(id));
         return id;
     }
-    void viewemployeecomplaints(int id,int i)
+    int generate_personid(int i)
+    {
+        int id;
+        do {
+            srand(static_cast<unsigned int>(std::time(0)));
+
+            return 1000 + std::rand() % 9000;
+
+        } while (dept[i]->check_personid(id));
+        return id;
+    }
+    bool check_managerid(int id, int d)
+    {
+        if (dept[d]->check_managerid(id))
+        {
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    int generate_managerid(int i)
+    {
+        int id;
+        do {
+            srand(static_cast<unsigned int>(std::time(0)));
+
+            return 1000 + std::rand() % 9000;
+
+        } while (dept[i]->check_managerid(id));
+        return id;
+    }
+    int generate_teacher_id()
+    {
+        int id;
+        do {
+            srand(static_cast<unsigned int>(std::time(0)));
+
+            return 1000 + std::rand() % 9000;
+
+        } while (check_teacherid(id));
+        return id;
+    }
+    bool check_teacherid(int id) {
+        for (const auto& teacher : teachers) {
+            if (teacher->getid() == id) {
+                return true;
+            }
+        }
+        return false;
+    }
+    void viewemployeecomplaints(int id, int i)
     {
         for (const auto& employee : dept[i]->getEmployees()) {
-			if (employee->getid() == id)
-			{ 
+            if (employee->getid() == id)
+            {
                 employee->viewcomplaints();
             }
         }
@@ -761,22 +1073,87 @@ public:
         for (const auto& employee : dept[i]->getEmployees()) {
             if (employee->getid() == id)
             {
-				employee->printComplaints(status);
-			}
-		}
-	}
-    bool setState(int id, State* state,int i)
+                employee->printComplaints(status);
+            }
+        }
+    }
+    bool setState(int id, State* state, int i)
     {
         for (const auto& complaint : dept[i]->getComplaints())
         {
-			if (complaint->getid() == id)
-			{ 
+            if (complaint->getid() == id)
+            {
                 complaint->setState(state);
-				return true;
+                return true;
             }
         }
         return false;
     }
+    bool checkassignmentstatus(int id, int i)
+    {
+        for (const auto& complaint : dept[i]->getComplaints())
+        {
+            if (complaint->getid() == id)
+            {
+				return complaint->checkassignmentstatus();
+			}
+		}
+		return false;
+	}
+    bool setassignmentstatus(int cid, int eid, int i, int status)
+    {
+        for (const auto& complaint : dept[i]->getComplaints())
+        {
+            if (complaint->getid() == cid)
+            {
+                return complaint->setassignmentstatus(eid, status);
+			}
+		}
+		return false;
+	}
+    string getassignedemployees(int id, int i)
+    {
+        for (const auto& complaint : dept[i]->getComplaints())
+        {
+            if (complaint->getid() == id)
+            {
+                return complaint->getassignedemployees();
+            }
+        }
+        return "";
+    }
+    void viewComplaintDetails(int id)
+    {
+        bool flag = false;
+        for (int i = 0; i < 3; i++)
+        {
+            if (dept[i]->printComplaintbyId(id)) {
+                flag = true;
+                return;
+            }
+
+
+        }
+        if (flag == false)
+        {
+            cout << "invalid id" << endl;
+            return;
+        }
+    }
+    void generateReportSummary(int sy, int sm, int sd, int ey, int em, int ed)
+    {
+        int s = 0;
+        for (int i = 0; i < 3; i++)
+        {
+            s += dept[i]->checkcomplaint(sy, sm, sd, ey, em, ed);
+        }
+        cout << endl;
+        cout << "the total complaints received within this time period were : " << s << endl;
+    }
+    int noofemployees(int i)
+    {
+		return dept[i]->getEmployees().size();
+	}
     ~Main()
     {
         for (auto& teacher : teachers)
@@ -808,9 +1185,7 @@ int main()
     app.displaydeptComplaints(1);
     app.displaydeptComplaints(2);
     app.printteachercomplaints();
-
     int choice;
-
     do {
         displayMainMenu();
         cout << "Enter your choice: ";
@@ -820,18 +1195,18 @@ int main()
             teacherMenu(app);
         }
         else if (choice == 2) {
-            //managerMenu();
+            managerMenu(app);
         }
         else if (choice == 3) {
             employeeMenu(app);
         }
         else if (choice == 4) {
-            // adminMenu();
+            adminMenu(app);
         }
         else if (choice == 5) {
-            // Generate reports
+            generatereport(app);
         }
-        else if (choice==6)
+        else if (choice == 6)
         {
             cout << "Exiting the system. Goodbye!\n";
         }
@@ -842,7 +1217,29 @@ int main()
     } while (choice != 6);
     return 0;
 }
-
+int Department::checkcomplaint(int sy, int sm, int sd, int ey, int em, int ed)
+{
+    Date startDate(sd, sm, sy);
+    Date endDate(ed, em, ey);
+    int count = 0;
+    for (const auto& complaint : complaints) {
+        Date complaintdate = complaint->getDate();
+        if (complaintdate >= startDate && complaintdate <= endDate) {
+            count++;
+            complaint->printComplaint();
+        }
+    }
+    return count;
+}
+bool Department::printComplaintbyId(int id) {
+    for (const auto& complaint : complaints) {
+        if (complaint->getid() == id) {
+            complaint->printComplaint();
+            return true;
+        }
+    }
+    return false;
+}
 void IT::printComplaints() const
 {
     cout << "IT Department Complaints:" << endl;
@@ -871,15 +1268,16 @@ void Accounts::printComplaints() const
 
 void Teacher::printComplaints() const
 {
-	cout << "\n\n\nTeacher: " << getName() << endl;
+    cout << "\n\n\nTeacher: " << getName() << endl;
     for (const auto& complaint : complaints)
     {
-		complaint->printComplaint();
-	}
+        complaint->printComplaint();
+    }
 }
 
-Assignment::Assignment(int d, int m, int y, Complaint* c, Employee* e) :date(d, m, y)
+Assignment::Assignment(int d, int m, int y, Complaint* c, Employee* e,int status) :date(d, m, y)
 {
+    this->status = status;
     complaint = c;
     employee = e;
     complaint->addassignment(this);
@@ -896,25 +1294,25 @@ bool compareChronologicalOrder(const Complaint* a, const Complaint* b) {
 }
 
 void Department::printComplaints(const string& status) const {
-	cout << getdeptname() << " Department Complaints:" << endl;
+    cout << getdeptname() << " Department Complaints:" << endl;
     for (const auto& complaint : getComplaints()) {
         if (complaint->getStatus() == status) {
-			complaint->printComplaint();
-		}
-	}
+            complaint->printComplaint();
+        }
+    }
 }
 
 void teacherMenu(Main& main) {
     int choice;
-        string id,name;
-        cout << "Enter ID: ";
-        cin.ignore();
-        getline(cin, id);
-        if (main.teacher(stoi(id),name))
-        {
-            cout << "\n\nWelcome " << name << endl;
-          do {  
-              // Display teacher menu options
+    string id, name;
+    cout << "Enter ID: ";
+    cin.ignore();
+    getline(cin, id);
+    if (main.teacher(stoi(id), name))
+    {
+        cout << "\n\nWelcome " << name << endl;
+        do {
+            // Display teacher menu options
             cout << "\nTeacher Menu\n";
             cout << "1. File a Complaint\n";
             cout << "2. View Complaints\n";
@@ -934,9 +1332,9 @@ void teacherMenu(Main& main) {
                 cout << "Enter Description: ";
                 cin.ignore();
                 getline(cin, description);
-                int complaint_id=main.generateid(dept-1);
+                int complaint_id = main.generateid(dept - 1);
                 cout << "Your complaint id is: " << complaint_id << endl;
-                main.addcomplaint(complaint_id,date, month, year, "New", description, id, dept - 1);
+                main.addcomplaint(complaint_id, date, month, year, "New", description, id, dept - 1);
 
             }
             else if (choice == 2) {
@@ -944,6 +1342,22 @@ void teacherMenu(Main& main) {
             }
             else if (choice == 3) {
                 // Record feedback
+                int complaint_id;
+                main.teachercomplaintsbystatus(stoi(id), "Resolved");
+                cout << "Enter complaint ID: ";
+                cin >> complaint_id;
+                cout<<"Are you satisfied with the resolution of your complaint?\n1.Yes\n2.No\n";
+                int c;
+                cin >> c;
+                if (main.addfeedback(complaint_id,stoi(id),c))
+                {
+                    cout<<"feedback recorded successfully"<<endl;
+                }
+                else
+                {
+					cout << "invalid choice" << endl;
+				}   
+                
             }
             else if (choice == 4) {
                 cout << "Returning to the main menu.\n";
@@ -951,67 +1365,329 @@ void teacherMenu(Main& main) {
             else {
                 cout << "Invalid choice. Please try again.\n";
             }
-          } while (choice != 4);
-        }
-        else
-        {
-            cout << "Invalid id, Please enter again\n";
-        }
+        } while (choice != 4);
+    }
+    else
+    {
+        cout << "Invalid id, Please enter again\n";
+    }
 
-    
+
 }
 
-void Department::addassignment(int id, vector<int>e, int d, int m, int y)
+void adminMenu(Main& main)
 {
+    int choice;
+    bool exitMenu = false;
 
+    while (!exitMenu) {
+        cout << "Admin Menu\n";
+        cout << "1. Add Employee\n";
+        cout << "2. Remove Employee\n";
+        cout << "3. Add Manager\n";
+        cout << "4. Remove Manager\n";
+        cout << "5. Add Teacher\n";
+        cout << "6. Remove Teacher\n";
+        cout << "7. Go Back to Main Menu\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            int dept;
+            string name;
+            int person_id;
+            cout << "Enter Department:\n1.IT\n2.Admin\n3.Accounts\n";
+            cin >> dept;
+            if (dept >= 1 && dept <= 3)
+            {
+                cout << "Enter your name : ";
+                cin.ignore();
+                getline(cin, name);
+                person_id = main.generate_personid(dept - 1);
+                cout << "Your employee ID is : " << person_id << endl;
+                string l = to_string(person_id) + "," + name;
+                main.addemployee(l, dept - 1);
+                main.displayEmployees(0);
+            }
+            else
+            {
+                cout << "invalid choice" << endl;
+            }
+
+        }
+        else if (choice == 2) {
+            int dept, id;
+            cout << "Enter Department:\n1.IT\n2.Admin\n3.Accounts\n";
+            cin >> dept;
+            if (dept >= 1 && dept <= 3)
+            {
+                cout << "Enter your ID :";
+                cin >> id;
+                bool check = main.checkid(id, dept - 1);
+                if (check)
+                {
+                    main.removeEmployee(id, dept - 1);
+                    main.displayEmployees(0);
+                }
+                else
+                {
+                    cout << "Employee with id : " << id << "does not exist" << endl;
+                }
+            }
+            else
+            {
+                cout << "invalid choice" << endl;
+            }
+
+
+
+        }
+        else if (choice == 3) {
+            int dept;
+            string name;
+            int manager_id;
+            int c;
+            cout << "Enter Department:\n1.IT\n2.Admin\n3.Accounts\n";
+            cin >> dept;
+            if (dept >= 1 && dept <= 3)
+            {
+                bool mgr = main.checkmanager(dept - 1);
+                if (mgr)
+                {
+                    cout << "this department already has a manager" << endl;
+                    cout << "do you still want to add a new manager? \n1.Yes\n2.No" << endl;
+                    cin >> c;
+                    if (c == 1)
+                    {
+                        main.removemanager(dept - 1);
+                        cout << "Enter your name : ";
+                        cin.ignore();
+                        getline(cin, name);
+                        manager_id = main.generate_managerid(dept - 1);
+                        cout << "Your manager ID is : " << manager_id << endl;
+                        string l = to_string(manager_id) + "," + name;
+                        main.addmanager(l, dept - 1);
+                        cout << "manager added successfully" << endl;
+                        main.displayManager(0);
+                        main.displayEmployees(0);
+                        main.displayManager(1);
+                        main.displayEmployees(1);
+                        main.displayManager(2);
+                        main.displayEmployees(2);
+                    }
+                    else if (c == 2)
+                    {
+                        exitMenu = true;
+                        cout << "Returning to the main menu.\n";
+                    }
+                    else
+                    {
+                        cout << "invalid choice" << endl;
+                    }
+                }
+                else
+                {
+                    cout << "Enter your name : ";
+                    cin.ignore();
+                    getline(cin, name);
+                    manager_id = main.generate_managerid(dept - 1);
+                    cout << "Your manager ID is : " << manager_id << endl;
+                    string l = to_string(manager_id) + "," + name;
+                    main.addmanager(l, dept - 1);
+                    cout << "manager added successfully" << endl;
+                    /*main.displayManager(0);
+                    main.displayEmployees(0);
+                    main.displayManager(1);
+                    main.displayEmployees(1);
+                    main.displayManager(2);
+                    main.displayEmployees(2);*/
+                }
+            }
+            else
+            {
+                cout << "invalid choice" << endl;
+            }
+
+        }
+        else if (choice == 4) {
+            int dept, id;
+            cout << "Enter Department:\n1.IT\n2.Admin\n3.Accounts\n";
+            cin >> dept;
+            if (dept >= 1 && dept <= 3)
+            {
+                main.removemanager(dept - 1);
+                cout << "manager has been removed successfully" << endl;
+                //main.displayManager(0);
+            }
+            else
+            {
+                cout << "invalid choice" << endl;
+            }
+
+        }
+        else if (choice == 5) {
+            string name;
+            int teacher_id;
+            cout << "Enter your name : ";
+            cin.ignore();
+            getline(cin, name);
+            teacher_id = main.generate_teacher_id();
+            cout << "Your teacher ID is : " << teacher_id << endl;
+            string l = to_string(teacher_id) + "," + name;
+            main.addteacher(l);
+            cout << "teacher has been added successfully" << endl;
+            main.displayTeachers();
+        }
+        else if (choice == 6) {
+            int id;
+            cout << "Enter the ID of the teacher to remove: ";
+            cin >> id;
+            if (main.check_teacherid(id)) {
+                main.removeTeacher(id);
+                cout << "Teacher with ID " << id << " has been removed." << endl;
+                main.displayTeachers();
+            }
+            else {
+                cout << "No teacher with ID " << id << " found." << endl;
+            }
+        }
+        else if (choice == 7) {
+            exitMenu = true;
+            cout << "Returning to the main menu.\n";
+        }
+        else {
+            cout << "Invalid choice. Please try again.\n";
+        }
+    }
+}
+void generatereport(Main& main)
+{
+    bool exitMenu = false;
+    int choice;
+    while (!exitMenu)
+    {
+        cout << "\nReports Menu\n";
+        cout << "1. View Summary of Complaints\n";
+        cout << "2. View Details of a Specific Complaint\n";
+        cout << "3. Go Back to Main Menu\n";
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        if (choice == 1) {
+            int syear, smonth, sdate;
+            int eyear, emonth, edate;
+            cout << "Enter start date in the format yyyy-mm-dd: ";
+            cin >> syear >> smonth >> sdate;
+            cout << "Enter end date in the format yyyy-mm-dd: ";
+            cin >> eyear >> emonth >> edate;
+            main.generateReportSummary(syear, smonth, sdate, eyear, emonth, edate);
+        }
+        else if (choice == 2) {
+            string cid;
+            cout << "Enter the ID of the complaint to view details: ";
+            cin.ignore();
+            getline(cin, cid);
+            main.viewComplaintDetails(stoi(cid));
+        }
+        else if (choice == 3) {
+            cout << "Returning to the main menu.\n";
+            exitMenu = true;
+        }
+        else {
+            cout << "Invalid choice. Please try again.\n";
+        }
+    }
+
+}
+void Department::addassignment(int id, vector<int> e, int d, int m, int y, vector<int> status)
+{
     // Ensure there is at least one complaint to assign to
-    if (!complaints.empty()) 
+    if (!complaints.empty())
     {
         for (const auto& complaint : getComplaints())
         {
             if (complaint->getid() == id)
             {
-                // Filter the provided employee names list to include only those who are in the specific department
-                for (const auto& employeeid : e) {
-                    for (const auto& emp : getEmployees()) {
-                        if (emp->getid() == employeeid) {
-                            new Assignment(d, m, y, complaint, emp);
-                            break; // Break the inner loop once the employee is found
+                Date date(d, m, y);
+                Date date1=complaint->getDate();
+                if(date1 < date)
+                { 
+                    // Filter the provided employee names list to include only those who are in the specific department
+                    for (size_t i = 0; i < e.size(); ++i)
+                    {
+                        int employeeid = e[i];
+                        int st = status[i];
+
+                        for (const auto& emp : getEmployees())
+                        {
+                            if (emp->getid() == employeeid)
+                            {
+                                if (complaint->getStatus() == "New")
+                                {
+                                    complaint->setState(Assigned::getInstance());
+                                }
+                                new Assignment(d, m, y, complaint, emp, st);
+                                break; // Break the inner loop once the employee is found
+                            }
                         }
                     }
                 }
-
+                else
+                {
+					cout << "invalid date" << endl;
+				}
                 break; // Break the outer loop once the complaint is found
             }
         }
     }
 }
+
 bool Department::checkid(int id)
 {
     for (const auto& complaint : getComplaints())
     {
         if (complaint->getid() == id)
         {
-			return true;
-		}
-	}
-	return false;
+            return true;
+        }
+    }
+    return false;
+}
+bool Department::check_personid(int id)
+{
+    for (const auto& employee : getEmployees())
+    {
+        if (employee->getid() == id)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+bool Department::check_managerid(int id)
+{
+    Manager* manager = getManager();
+    if (manager != nullptr && manager->getid() == id)
+    {
+        return true;
+    }
+    return false;
 }
 void Assignment::viewcomplaints()
 {
-	complaint->printComplaint();
+    complaint->printComplaint();
 }
 void Employee::printComplaints(const string& status) const {
-	//cout << "Employee: " << getName() << endl;
+    //cout << "Employee: " << getName() << endl;
     for (const auto& assignment : assignments) {
         if (assignment->getstatus() == status) {
-			assignment->viewcomplaints();
-		}
-	}
+            assignment->viewcomplaints();
+        }
+    }
 }
 string Assignment::getstatus()
 {
-	return complaint->getStatus();
+    return complaint->getStatus();
 }
 
 void Department::setState(int id, State* state)
@@ -1020,24 +1696,31 @@ void Department::setState(int id, State* state)
     {
         if (complaint->getid() == id)
         {
-			complaint->setState(state);
-			break;
-		}
-	}
+            complaint->setState(state);
+            break;
+        }
+    }
+}
+string Assignment::employeename()const
+{
+	return employee->getName();
+}
+int Assignment::employeeid()const
+{
+	return employee->getid();
 }
 void employeeMenu(Main& main) {
     int choice;
     int dept;
     cout << "Enter Department:\n1.IT\n2.Admin\n3.Accounts\n";
     cin >> dept;
-    int cid,in;
+    int cid, in;
     string id, name;
     cout << "Enter ID: ";
     cin.ignore();
     getline(cin, id);
-    if(main.checkemployee(stoi(id), name, dept - 1))
+    if (main.checkemployee(stoi(id), name, dept - 1))
     {
-        
         cout << "\n\nWelcome " << name << endl;
         do {
             // Display employee menu options
@@ -1049,26 +1732,27 @@ void employeeMenu(Main& main) {
             std::cin >> choice;
 
             if (choice == 1) {
-                cout<<"Assigned Jobs:\n";
-                main.printemployeestatus(stoi(id), dept - 1,"Assigned");
-                cout<<"\nResolved Jobs:\n";
+                cout << "Assigned Jobs:\n";
+                main.printemployeestatus(stoi(id), dept - 1, "Assigned");
+                cout << "\nResolved Jobs:\n";
                 main.printemployeestatus(stoi(id), dept - 1, "Resolved");
             }
             else if (choice == 2) {
                 // Update job completion
                 main.printemployeestatus(stoi(id), dept - 1, "Assigned");
-                cout<< "Enter complaint id: ";
+                cout << "\nEnter complaint id: ";
                 cin >> cid;
-                cout<<"Do you want to mark this job as done?\n1.Yes\n2.No\n";
-                cin>>in;
-                cout<<"Are you sure?\n1.Yes\n2.No\n";
+                cout << "Do you want to mark this job as done?\n1.Yes\n2.No\n";
+                cin >> in;
+                cout << "Are you sure?\n1.Yes\n2.No\n";
                 cin >> in;
                 if (in == 1)
                 {
-					if(main.setState(cid, Resolved::getInstance(),dept-1))
+                   // if (main.setState(cid, Resolved::getInstance(), dept - 1))
+                    if (main.setassignmentstatus(cid, stoi(id), dept - 1, 1))
                         cout << "Job marked as done\n";
                     else
-                        cout<< "An error occured\n";
+                        cout << "An error occured\n";
                 }
             }
             else if (choice == 3) {
@@ -1079,9 +1763,134 @@ void employeeMenu(Main& main) {
             }
         } while (choice != 3);
 
-    } 
+    }
     else
     {
-		cout << "Invalid id, Please enter again\n";
-	}
+        cout << "Invalid id, Please enter again\n";
+    }
+}
+void managerMenu(Main& main) {
+    int choice;
+    int dept;
+    cout << "Enter Department:\n1.IT\n2.Admin\n3.Accounts\n";
+    cin >> dept;
+    int cid, in;
+    string id, name;
+    cout << "Enter ID: ";
+    cin.ignore();
+    getline(cin, id);
+    if (main.checkmgr(stoi(id), name, dept - 1))
+    {
+        cout << "\n\nWelcome " << name << endl;
+        do {
+            // Display manager menu options
+            std::cout << "\nManager Menu\n";
+            std::cout << "1. Assign Job to Employee\n";
+            std::cout << "2. Update Job Completion\n";
+            std::cout << "3. View Complaints\n";
+            std::cout << "4. Go Back to Main Menu\n";
+            std::cout << "Enter your choice: ";
+            std::cin >> choice;
+
+            if (choice == 1) {
+                // Assign job to employee
+                int eid,n;string eids;
+                cout << "UnAssigned Complaints:\n";
+                main.displaycomplaints(dept - 1, "New");
+                cout<< "\nEnter complaint id: ";
+                cin >> cid;
+                if (main.checkassignmentstatus(cid, dept - 1))
+                {
+					cout << "ERROR:Job already assigned" << endl;
+					continue;
+				}
+                else if(main.checkcomplaint(cid,dept-1))
+                {
+                    cout << "Employees:\n";
+                    main.displayEmployees(dept - 1);
+                    cout << "Enter the number of employees you want to assign this complaint to:";
+                    cin >> n;
+                    if (n > 0 && n < main.noofemployees(dept-1))
+                    {
+                        cout << "Enter employee ids: ";
+                        for (int i = 0; i < n; i++)
+                        {
+                            cin >> eid;
+                            if (main.checkemployee(eid, name, dept - 1))
+                            {
+                                eids += to_string(eid) + ":0,";
+                            }
+                            else
+                            {
+                                cout << "invalid employee id" << endl;
+                            }
+                        }
+                        if (eids.length() > 0)
+                        {
+                            int d, m, y;
+                            cout << "Enter date of assignment in the format yyyy-mm-dd: ";
+                            cin >> y >> m >> d;
+                            
+                            main.addassignment(cid, eids, d, m, y, dept - 1, "Assigned");
+                            cout<<"Job assigned to respective employees successfully\n";
+                        }
+                    }
+                    else
+                    {
+						cout << "invalid number of employees" << endl;
+					}
+                }
+                else
+                {
+					cout << "invalid complaint id" << endl;
+				}
+
+            }
+            else if (choice == 2) {
+                // Update job completion
+                main.displaycomplaints(dept - 1, "Assigned");
+                cout << "\nEnter complaint id: ";
+                cin >> cid;
+                cout << "Do you want to mark this complaint to be resolved?\n1.Yes\n2.No\n";
+                cin >> in;
+                cout << "Are you sure?\n1.Yes\n2.No\n";
+                cin >> in;
+                if (in == 1)
+                {
+                    if (main.checkassignmentstatus(cid, dept - 1))
+                    {
+                        if (main.setState(cid, Resolved::getInstance(), dept - 1))
+                            cout << "Complaint marked as resolved\n";
+                        else
+                            cout << "An error occured\n";
+                    }
+                    else
+                    {
+                        cout << "ERROR:Job In Progress" << endl;
+                    }
+                }
+
+            }
+            else if (choice == 3) {
+                cout << "Complaints:\n";
+                main.displaycomplaints(dept - 1, "New");
+                main.displaycomplaints(dept - 1, "Assigned");
+                main.displaycomplaints(dept - 1, "Resolved");
+                main.displaycomplaints(dept - 1, "Closed");
+            }
+            else if (choice == 4) {
+                std::cout << "Returning to the main menu.\n";
+            }
+            else {
+                std::cout << "Invalid choice. Please try again.\n";
+            }
+
+        } while (choice != 4);
+    }
+    else
+    {
+        cout << "Invalid id, Please enter again\n";
+    }
+
+
 }

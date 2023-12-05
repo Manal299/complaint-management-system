@@ -1,5 +1,5 @@
 1789;2023-12-05;Closed;Discrepancies in departmental budget report;2597:5678,2845,5962;2023-12-06
-2156;2023-11-15;New;Delayed salary payments reported by staff;4185
+2156;2023-11-15;New;Delayed salary payments reported by staff;41853
 1024;2023-10-20;Resolved;Errors in student tuition fee invoices;1269:6543,5962;2023-10-21
-7654;2023-09-08;Assigned;Reimbursement requests not processed;7150:8392,1275;2023-09-09
-3921;2023-08-02;Assigned;Issues with vendor payment processing;9316:6543,3491,9821,5678;2023-08-03
+7654;2023-09-08;Assigned;Reimbursement requests not processed;7150:8392:1,1275:1;2023-09-09
+3921;2023-08-02;Assigned;Issues with vendor payment processing;9316:6543:0,3491:0,9821:0,5678:0;2023-08-03

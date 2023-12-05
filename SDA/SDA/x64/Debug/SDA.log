@@ -1,1 +1,7 @@
-﻿  SDA.vcxproj -> E:\complaint-management-system\SDA\x64\Debug\SDA.exe
+﻿  sda.cpp
+E:\complaint-management-system\SDA\SDA\sda.cpp(540,16): warning C4101: 'm': unreferenced local variable
+E:\complaint-management-system\SDA\SDA\sda.cpp(540,19): warning C4101: 'y': unreferenced local variable
+E:\complaint-management-system\SDA\SDA\sda.cpp(540,13): warning C4101: 'd': unreferenced local variable
+E:\complaint-management-system\SDA\SDA\sda.cpp(1155,38): warning C4267: 'return': conversion from 'size_t' to 'int', possible loss of data
+E:\complaint-management-system\SDA\SDA\sda.cpp(1513,23): warning C4101: 'id': unreferenced local variable
+  SDA.vcxproj -> E:\complaint-management-system\SDA\x64\Debug\SDA.exe
